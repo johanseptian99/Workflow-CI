@@ -29,12 +29,8 @@ ROOT_FOLDER_ID = os.environ[
 def create_folder(folder_name, parent_id):
 
     metadata = {
-
         "name": folder_name,
-
-        "mimeType":
-        "application/vnd.google-apps.folder",
-
+        "mimeType": "application/vnd.google-apps.folder",
         "parents": [parent_id]
     }
 
@@ -46,124 +42,77 @@ def create_folder(folder_name, parent_id):
 
     return folder["id"]
 
+def upload_file(file_path, parent_id):
 
-def upload_directory(
-    local_dir,
-    parent_drive_id
-):
+    filename = os.path.basename(file_path)
 
-    for item_name in os.listdir(local_dir):
+    print(f"Uploading: {filename}")
 
-        item_path = os.path.join(
-            local_dir,
-            item_name
-        )
+    metadata = {
+        "name": filename,
+        "parents": [parent_id]
+    }
 
-        if os.path.isdir(item_path):
+    media = MediaFileUpload(
+        file_path,
+        resumable=True
+    )
 
-            folder_id = create_folder(
-                item_name,
-                parent_drive_id
-            )
-
-            print(
-                f"Created Folder: {item_name}"
-            )
-
-            upload_directory(
-                item_path,
-                folder_id
-            )
-
-        else:
-
-            print(
-                f"Uploading: {item_name}"
-            )
-
-            metadata = {
-
-                "name": item_name,
-
-                "parents": [
-                    parent_drive_id
-                ]
-            }
-
-            media = MediaFileUpload(
-                item_path,
-                resumable=True
-            )
-
-            service.files().create(
-
-                body=metadata,
-
-                media_body=media,
-
-                fields="id",
-
-                supportsAllDrives=True
-
-            ).execute()
+    service.files().create(
+        body=metadata,
+        media_body=media,
+        fields="id",
+        supportsAllDrives=True
+    ).execute()
 
 def main():
 
-    mlruns_dir = "./mlruns"
-
     artifacts_dir = "./artifacts"
+
+    if not os.path.exists(artifacts_dir):
+        raise FileNotFoundError(
+            "Folder artifacts tidak ditemukan"
+        )
 
     from datetime import datetime
 
-    run_folder_name = (
-        datetime.now()
-        .strftime(
+    upload_folder_name = (
+        "artifacts_"
+        + datetime.now().strftime(
             "%Y%m%d_%H%M%S"
         )
     )
 
-    root_run_folder = create_folder(
-        run_folder_name,
+    drive_folder_id = create_folder(
+        upload_folder_name,
         ROOT_FOLDER_ID
     )
 
     print(
-        f"Created Root Folder: "
-        f"{run_folder_name}"
+        f"Created Drive Folder: {upload_folder_name}"
     )
 
-    if os.path.exists(
-        mlruns_dir
-    ):
-
-        mlruns_folder = create_folder(
-            "mlruns",
-            root_run_folder
-        )
-
-        upload_directory(
-            mlruns_dir,
-            mlruns_folder
-        )
-
-    if os.path.exists(
+    for file_name in os.listdir(
         artifacts_dir
     ):
 
-        artifacts_folder = create_folder(
-            "artifacts",
-            root_run_folder
+        file_path = os.path.join(
+            artifacts_dir,
+            file_name
         )
 
-        upload_directory(
-            artifacts_dir,
-            artifacts_folder
-        )
+        if os.path.isfile(
+            file_path
+        ):
+
+            upload_file(
+                file_path,
+                drive_folder_id
+            )
 
     print(
-        "Upload Finished"
+        "All artifacts uploaded successfully."
     )
-
 
 if __name__ == "__main__":
     main()
