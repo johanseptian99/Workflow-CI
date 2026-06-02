@@ -1,0 +1,22 @@
+name: apple-quality-mlflow
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+
+  - python=3.12.7
+
+  - pandas
+  - numpy
+  - scikit-learn
+  - matplotlib
+  - seaborn
+
+  - pip
+
+  - pip:
+      - mlflow
+      - google-api-python-client
+      - google-auth
