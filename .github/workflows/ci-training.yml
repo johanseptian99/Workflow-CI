@@ -64,19 +64,15 @@ jobs:
       - name: Get Latest Run ID
         shell: bash -el {0}
         run: |
-
           cd MLProject
 
-          RUN_ID=$(find mlruns \
-            -name meta.yaml \
-            | grep -v "/models/" \
-            | grep -v "mlruns/0/meta.yaml" \
-            | head -n 1 \
-            | xargs dirname \
-            | xargs basename)
+          echo "===== DEBUG ====="
+          find mlruns -type d
+          echo "================="
+
+          RUN_ID=$(find mlruns/0 -mindepth 1 -maxdepth 1 -type d | xargs -I {} basename {} | grep -E '^[a-z0-9]{32}$' | sort | tail -n 1)
 
           echo "RUN_ID=$RUN_ID"
-
           echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
