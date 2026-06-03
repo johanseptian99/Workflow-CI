@@ -48,8 +48,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+          git config --global user.name ${{ secrets.username }}
+          git config --global user.email ${{ secrets.email }}"
 
           git add MLProject/artifacts
 
