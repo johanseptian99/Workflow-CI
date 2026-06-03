@@ -41,16 +41,21 @@ jobs:
         with:
           name: mlflow-artifacts
           path: |
-            MLProject/mlruns
+            MLProject/artifacts
           if-no-files-found: warn
 
       - name: Save mlruns to repo
         run: |
+
           git config --global user.name ${{ secrets.username }}
           git config --global user.email ${{ secrets.email }}
-          git add mlruns/
-          git commit -m "Save mlruns from CI run"
-          git push origin master
+
+          git add MLProject/artifacts
+
+          git diff --staged --quiet || \
+          git commit -m "Update ML artifacts"
+
+          git push origin main
 
       - name: Get Latest Run ID
         run: |
