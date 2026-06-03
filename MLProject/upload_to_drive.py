@@ -23,6 +23,25 @@ ROOT_FOLDER_ID = os.environ.get("GDRIVE_FOLDER_ID")
 if not ROOT_FOLDER_ID:
     raise ValueError("Environment variable 'GDRIVE_FOLDER_ID' tidak ditemukan.")
 
+PERSONAL_EMAIL = os.environ.get("PERSONAL_EMAIL")
+
+def transfer_ownership(file_id):
+    """Fungsi pembantu untuk memindahkan kepemilikan file/folder ke email pribadi"""
+    try:
+        permission_metadata = {
+            "type": "user",
+            "role": "owner",
+            "emailAddress": PERSONAL_EMAIL
+        }
+        
+        service.permissions().create(
+            fileId=file_id,
+            body=permission_metadata,
+            transferOwnership=True,
+            supportsAllDrives=True
+        ).execute()
+    except Exception as e:
+        print(f"Gagal mentransfer kepemilikan untuk ID {file_id}: {e}")
 
 def create_folder(folder_name, parent_id):
     metadata = {
@@ -37,7 +56,11 @@ def create_folder(folder_name, parent_id):
         supportsAllDrives=True
     ).execute()
 
-    return folder["id"]
+    folder_id = folder["id"]
+    
+    transfer_ownership(folder_id)
+    
+    return folder_id
 
 
 def upload_file(file_path, parent_id):
@@ -54,13 +77,14 @@ def upload_file(file_path, parent_id):
         resumable=True
     )
 
-    service.files().create(
+    file = service.files().create(
         body=metadata,
         media_body=media,
         fields="id",
         supportsAllDrives=True
     ).execute()
 
+    transfer_ownership(file["id"])
 
 def main():
     artifacts_dir = "./artifacts"
