@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: write
-  
+
 jobs:
   train-and-deploy:
 
@@ -62,16 +62,26 @@ jobs:
           git push origin main
 
       - name: Get Latest Run ID
+        shell: bash -el {0}
         run: |
+
           cd MLProject
 
-          EXPERIMENT_ID=$(find mlruns -maxdepth 1 -mindepth 1 -type d | grep -v ".trash" | sort | head -n 1 | xargs basename)
+          echo "===== DEBUG ====="
+          find mlruns -type d
+          echo "================="
 
-          RUN_ID=$(find mlruns/$EXPERIMENT_ID -maxdepth 1 -mindepth 1 -type d | sort | tail -n 1 | xargs basename)
-
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+          RUN_ID=$(find mlruns/0 \
+            -mindepth 1 \
+            -maxdepth 1 \
+            -type d \
+            | sort \
+            | tail -n 1 \
+            | xargs basename)
 
           echo "RUN_ID=$RUN_ID"
+
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -80,10 +90,14 @@ jobs:
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Build Docker Model
+        shell: bash -el {0}
         run: |
+
           cd MLProject
 
           echo "Building from run: $RUN_ID"
+
+          which mlflow
 
           mlflow models build-docker \
             --model-uri "runs:/$RUN_ID/model" \
