@@ -67,16 +67,12 @@ jobs:
 
           cd MLProject
 
-          echo "===== DEBUG ====="
-          find mlruns -type d
-          echo "================="
-
-          RUN_ID=$(find mlruns/0 \
-            -mindepth 1 \
-            -maxdepth 1 \
-            -type d \
-            | sort \
-            | tail -n 1 \
+          RUN_ID=$(find mlruns \
+            -name meta.yaml \
+            | grep -v "/models/" \
+            | grep -v "mlruns/0/meta.yaml" \
+            | head -n 1 \
+            | xargs dirname \
             | xargs basename)
 
           echo "RUN_ID=$RUN_ID"
